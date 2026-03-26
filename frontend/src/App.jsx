@@ -52,7 +52,11 @@ const AscendLogo = ({ className }) => (
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [role, setRole] = useState("STUDENT");
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [theme, setTheme] = useState("light");
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -103,9 +107,34 @@ export default function App() {
     }
   }, [isLoggedIn]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setIsLoggedIn(true);
+    setLoginError(""); // Clear previous errors
+
+    try {
+      // Send the email and role to our new backend route
+      const response = await fetch("https://mtrkyf-3000.csb.app/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: emailInput,
+          password: passwordInput,
+          role: role,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setCurrentUser(data.user); // Save the DB user to React!
+        setIsLoggedIn(true); // Unlock the dashboard
+      } else {
+        setLoginError("Account not found. Invalid email, password, or role.");
+      }
+    } catch (err) {
+      console.error("Login request failed", err);
+      setLoginError("Server offline. Cannot connect to database.");
+    }
   };
 
   // --- Glassmorphism & Theme Variables ---
@@ -241,14 +270,14 @@ export default function App() {
                 }`}
               >
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold">Avanthi</p>
+                  <p className="text-sm font-bold">{currentUser.name}</p>
                   <p className="text-xs text-indigo-500 font-semibold uppercase">
                     {role}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center overflow-hidden shadow-sm">
                   <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Avanthi"
+                    src="https://api.dicebear.com/7.x/avataaars/svg?seed={currentUser.name}"
                     alt="Avatar"
                     className="w-full h-full object-cover"
                   />
@@ -300,7 +329,7 @@ export default function App() {
                   </div>
                   <div className="relative z-10">
                     <h1 className="text-3xl sm:text-4xl font-display font-extrabold mb-3">
-                      Welcome back, Avanthi!
+                      Welcome back, {currentUser.name}!
                     </h1>
                     <p className="text-indigo-100 mb-5 font-medium">
                       Your current rank is Top 15% in Winter Semester 2025-26.
@@ -555,7 +584,6 @@ export default function App() {
                             </span>
                           </div>
 
-                          {/* Real DB Timestamp! */}
                           <div className="flex-1 text-right">
                             <span className={`${textMuted} font-medium`}>
                               {post.createdAt
@@ -941,6 +969,8 @@ export default function App() {
               <input
                 type="email"
                 placeholder="Email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
                 className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all bg-slate-50 font-medium"
                 required
               />
@@ -949,9 +979,12 @@ export default function App() {
               <input
                 type="password"
                 placeholder="Password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
                 className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all bg-slate-50 font-medium"
                 required
               />
+
               <div className="text-right mt-3">
                 <a
                   href="#"
@@ -961,6 +994,12 @@ export default function App() {
                 </a>
               </div>
             </div>
+
+            {loginError && (
+              <div className="text-red-500 text-sm font-bold text-center bg-red-50 p-3 rounded-xl border border-red-200">
+                {loginError}
+              </div>
+            )}
             <button
               type="submit"
               className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 mt-4"
