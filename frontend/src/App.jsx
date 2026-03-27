@@ -73,11 +73,14 @@ export default function App() {
   const [postContent, setPostContent] = useState("");
 
   // Fetch Courses (Strict Error Handling)
+  // Fetch Courses (Tenant-Scoped)
   useEffect(() => {
-    if (isLoggedIn) {
+    // Only run this if we are logged in AND we know WHO is logged in
+    if (isLoggedIn && currentUser) {
       setLoading(true);
-      // NOTE: Ensure this URL matches your CodeSandbox backend URL perfectly!
-      fetch("https://mtrkyf-3000.csb.app/api/courses")
+      fetch(
+        `https://mtrkyf-3000.csb.app/api/courses?userId=${currentUser.id}&role=${currentUser.role}`
+      )
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
           return res.json();
@@ -88,16 +91,18 @@ export default function App() {
         })
         .catch((err) => {
           console.error("Course fetch error:", err);
-          setErrorMsg("Failed to load courses. Is the backend running?");
+          setErrorMsg("Failed to load courses.");
           setLoading(false);
         });
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, currentUser]); // Run again if the user changes!
 
-  // Fetch Posts (Strict Error Handling)
+  // Fetch Posts (Tenant-Scoped)
   useEffect(() => {
-    if (isLoggedIn) {
-      fetch("https://mtrkyf-3000.csb.app/api/posts")
+    if (isLoggedIn && currentUser) {
+      fetch(
+        `https://mtrkyf-3000.csb.app/api/posts?userId=${currentUser.id}&role=${currentUser.role}`
+      )
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP Error! Status: ${res.status}`);
           return res.json();
@@ -105,7 +110,7 @@ export default function App() {
         .then((data) => setPosts(data))
         .catch((err) => console.error("Posts fetch error:", err));
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, currentUser]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -331,9 +336,7 @@ export default function App() {
                     <h1 className="text-3xl sm:text-4xl font-display font-extrabold mb-3">
                       Welcome back, {currentUser.name}!
                     </h1>
-                    <p className="text-indigo-100 mb-5 font-medium">
-                      Your current rank is Top 15% in Winter Semester 2025-26.
-                    </p>
+
                     <div className="flex flex-wrap gap-3">
                       <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-bold border border-white/20 shadow-sm">
                         <Trophy
@@ -377,8 +380,24 @@ export default function App() {
                         {errorMsg}
                       </div>
                     ) : courses.length === 0 ? (
-                      <div className="text-center p-10 border-2 border-dashed rounded-xl border-slate-300 text-slate-500 font-bold">
-                        No active enrollments found.
+                      <div
+                        className={`${glassCard} flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-3xl ${
+                          isDark ? "border-slate-700" : "border-slate-200"
+                        }`}
+                      >
+                        <BookOpen
+                          size={48}
+                          className="text-indigo-500/80 dark:text-indigo-400 mb-5"
+                          strokeWidth={1.5}
+                        />
+                        <h3 className="text-2xl font-display font-extrabold mb-2">
+                          No courses enrolled
+                        </h3>
+                        <p
+                          className={`${textMuted} font-medium text-center max-w-sm`}
+                        >
+                          You are not currently assigned to any active courses.
+                        </p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -450,10 +469,22 @@ export default function App() {
 
                     {posts.length === 0 ? (
                       <div
-                        className={`p-5 rounded-3xl ${glassCard} text-center`}
+                        className={`${glassCard} flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-3xl ${
+                          isDark ? "border-slate-700" : "border-slate-200"
+                        }`}
                       >
-                        <p className={`text-sm ${textMuted}`}>
-                          No trending posts yet.
+                        <MessageSquare
+                          size={40}
+                          className="text-indigo-500/80 dark:text-indigo-400 mb-4"
+                          strokeWidth={1.5}
+                        />
+                        <h3 className="text-xl font-display font-extrabold mb-1">
+                          No trending posts
+                        </h3>
+                        <p
+                          className={`${textMuted} font-medium text-center text-sm`}
+                        >
+                          Your courses' Peer Hubs are quiet.
                         </p>
                       </div>
                     ) : (
@@ -537,11 +568,33 @@ export default function App() {
 
                 <div className="space-y-6">
                   {posts.length === 0 && (
-                    <p className="text-center font-bold text-slate-500 py-10 border-2 border-dashed rounded-xl border-slate-300">
-                      No resources found.
-                    </p>
-                  )}
+                    <div
+                      className={`${glassCard} text-center p-16 border-2 border-dashed rounded-3xl ${
+                        isDark ? "border-slate-700" : "border-slate-200"
+                      } `}
+                    >
+                      <Users
+                        size={48}
+                        className="mx-auto text-indigo-500/80 dark:text-indigo-400 mb-5"
+                        strokeWidth={1.5}
+                      />
+                      <h3 className="text-2xl font-display font-extrabold mb-2">
+                        It's quiet in here...
+                      </h3>
+                      <p
+                        className={`${textMuted} font-medium mb-8 max-w-sm mx-auto`}
+                      >
+                        No study resources have been shared in your courses yet.
+                      </p>
 
+                      <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-8 py-3 bg-indigo-500 text-white rounded-full font-bold shadow-lg hover:bg-indigo-600 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
+                      >
+                        <Edit3 size={18} /> Be the first to Contribute!
+                      </button>
+                    </div>
+                  )}
                   {posts
                     .filter(
                       (post) =>
