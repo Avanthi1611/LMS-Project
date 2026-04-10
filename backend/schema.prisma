@@ -60,6 +60,7 @@ model PeerResource {
   createdAt    DateTime @default(now())
   authorId     String
   courseId     String
+  mediaUrl     String?
   author       User     @relation(fields: [authorId], references: [id])
   course       Course   @relation(fields: [courseId], references: [id])
   votes        Vote[]

@@ -1,5 +1,6 @@
 // src/components/PeerHub.jsx
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import {
   Edit3,
   Users,
@@ -9,6 +10,9 @@ import {
   Flag,
   ArrowBigUp,
   ArrowBigDown,
+  FileText,
+  Download,
+  Link as LinkIcon,
 } from "lucide-react";
 
 export default function PeerHub({
@@ -21,6 +25,12 @@ export default function PeerHub({
   glassCard,
   textMuted,
 }) {
+  // Helper function to check if a URL is an image
+  const isImageUrl = (url) => {
+    if (!url) return false;
+    return url.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) !== null;
+  };
+
   return (
     <div className="max-w-4xl mx-auto pb-20">
       <div className="flex justify-between items-center mb-6">
@@ -151,9 +161,10 @@ export default function PeerHub({
                     <ArrowBigDown size={24} strokeWidth={1.5} />
                   </button>
                 </div>
+
                 <div className="p-4 flex-1">
                   <h2
-                    className={`text-xl font-bold mb-2 ${
+                    className={`text-xl font-bold mb-3 ${
                       post.type === "CODE"
                         ? "font-code tracking-tight"
                         : "font-display"
@@ -161,13 +172,69 @@ export default function PeerHub({
                   >
                     {post.title}
                   </h2>
-                  <p
-                    className={`${
-                      isDark ? "text-slate-300" : "text-slate-700"
-                    } mb-4 whitespace-pre-wrap`}
-                  >
-                    {post.content}
-                  </p>
+
+                  {/* TEXT CONTENT */}
+                  {post.content && (
+                    <div
+                      className={`mb-4 prose prose-sm max-w-none ${
+                        isDark ? "prose-invert" : ""
+                      } ${isDark ? "text-slate-300" : "text-slate-700"}`}
+                    >
+                      <ReactMarkdown>{post.content}</ReactMarkdown>
+                    </div>
+                  )}
+
+                  {/* MEDIA CONTENT (NEW!) */}
+                  {post.mediaUrl && (
+                    <div className="mb-5">
+                      {isImageUrl(post.mediaUrl) ? (
+                        /* If it's an image, show the image */
+                        <div className="rounded-xl overflow-hidden border dark:border-slate-700 max-h-96 flex bg-slate-100 dark:bg-slate-900">
+                          <img
+                            src={post.mediaUrl}
+                            alt="Attached Media"
+                            className="object-contain w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        /* If it's a file or link, show a sleek download card */
+                        <a
+                          href={post.mediaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-md ${
+                            isDark
+                              ? "border-slate-700 bg-slate-800/50 hover:bg-slate-700/80 hover:border-indigo-500"
+                              : "border-slate-200 bg-slate-50 hover:bg-white hover:border-indigo-400"
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center">
+                            {post.type === "LINK" ? (
+                              <LinkIcon size={20} />
+                            ) : (
+                              <FileText size={20} />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">
+                              {post.type === "LINK"
+                                ? "External Resource Link"
+                                : "Attached File Document"}
+                            </p>
+                            <p className={`text-xs ${textMuted}`}>
+                              Click to open in new tab
+                            </p>
+                          </div>
+                          <Download
+                            size={18}
+                            className="text-indigo-500 mr-2"
+                          />
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ACTION BUTTONS */}
                   <div
                     className={`flex items-center gap-4 text-xs font-bold ${textMuted}`}
                   >

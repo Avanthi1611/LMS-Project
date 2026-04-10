@@ -267,9 +267,7 @@ export default function App() {
               />
             )}
 
-            {/* ========================================== */}
             {/* PEER HUB TAB                               */}
-            {/* ========================================== */}
             {activeTab === "peerhub" && (
               <PeerHub
                 posts={posts}
@@ -285,9 +283,7 @@ export default function App() {
           </main>
         </div>
 
-        {/* ========================================== */}
         {/* CONTRIBUTE MODAL                           */}
-        {/* ========================================== */}
         <ContributeModal
           isModalOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
@@ -298,14 +294,17 @@ export default function App() {
           setPostContent={setPostContent}
           isDark={isDark}
           textMuted={textMuted}
+          currentUser={currentUser}
+          selectedCourse={selectedCourse}
+          setSelectedCourse={setSelectedCourse}
+          setPosts={setPosts}
+          posts={posts}
         />
       </div>
     );
-  } // <-- THIS closing bracket was missing!
+  }
 
-  // ==========================================
   // LOGIN VIEW (Clean Canvas Default)
-  // ==========================================
   return (
     <Login
       role={role}

@@ -92,7 +92,7 @@ app.get("/api/posts", async (req, res) => {
 // 4. CREATE NEW POST ROUTE
 app.post("/api/posts", async (req, res) => {
   try {
-    const { title, content, type, courseId, userId } = req.body;
+    const { title, content, type, courseId, userId, mediaUrl } = req.body;
 
     const newPost = await prisma.peerResource.create({
       data: {
@@ -102,6 +102,7 @@ app.post("/api/posts", async (req, res) => {
         courseId,
         authorId: userId,
         helpfulScore: 0,
+        mediaUrl,
       },
       include: {
         author: true,
